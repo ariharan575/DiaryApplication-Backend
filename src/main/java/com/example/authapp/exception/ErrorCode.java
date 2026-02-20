@@ -1,0 +1,49 @@
+package com.example.authapp.exception;
+
+public enum ErrorCode {
+
+    // ===== AUTH =====
+    EMAIL_ALREADY_EXISTS,
+    INVALID_CREDENTIALS,
+    EMAIL_NOT_VERIFIED,
+    ACCOUNT_DISABLED,
+    ACCESS_DENIED,
+
+    // ===== ENCRYPT-DECRYPT =====
+    CRYPTO_ENCRYPT_FAILED,
+    CRYPTO_DECRYPT_FAILED,
+    CRYPTO_INVALID_KEY,
+    CRYPTO_DATA_TAMPERED,
+
+    // ===== OTP =====
+    OTP_INVALID,
+    OTP_EXPIRED,
+    OTP_NOT_VERIFIED,
+    OTP_ALREADY_USED,
+
+    // ===== TOKEN =====
+    ACCESS_TOKEN_INVALID,
+    ACCESS_TOKEN_EXPIRED,
+    REFRESH_TOKEN_INVALID,
+    REFRESH_TOKEN_EXPIRED,
+    REFRESH_TOKEN_REUSED,
+
+    // ===== USER =====
+    USER_NOT_FOUND,
+
+    // ===== DIARY =====
+    DIARY_NAME_ALREADY_EXISTS,
+    DIARY_NOT_FOUND,
+    DIARY_ACCESS_DENIED,
+    DIARY_DECRYPT_FAILED,
+
+    // ===== FOLDER =====
+    FOLDER_NOT_FOUND,
+    FOLDER_NAME_ALREADY_EXISTS,
+
+    // ===== VALIDATION =====
+    VALIDATION_ERROR,
+
+    // ===== SYSTEM =====
+    INTERNAL_ERROR
+}
