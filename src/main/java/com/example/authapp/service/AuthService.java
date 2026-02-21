@@ -61,7 +61,7 @@ public class AuthService {
 
          otpService.saveOrUpdateOtp(request.getEmail(),otp,Otp_Usage.REGISTER,user);
 
-        return "User Register Successfully,OTP send Your EmaiL";
+        return "OTP send Your Email";
 
     }
 
