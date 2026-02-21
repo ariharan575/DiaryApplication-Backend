@@ -20,6 +20,7 @@ public enum ErrorCode {
     OTP_EXPIRED,
     OTP_NOT_VERIFIED,
     OTP_ALREADY_USED,
+    MAIL_FAILED,
 
     // ===== TOKEN =====
     ACCESS_TOKEN_INVALID,

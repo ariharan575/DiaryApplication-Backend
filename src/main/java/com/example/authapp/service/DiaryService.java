@@ -73,8 +73,6 @@ public class DiaryService {
 
         String decryptedDiary = encryptionService.decryptDiary(diary.getContent(), getCurrentUserId(userId));
 
-        System.out.println(decryptedDiary);
-
         return new DiaryDto(diary.getId(),diary.getUserId(),diary.getTitle(),
                 decryptedDiary,diary.getCreatedAt(),diary.getStatus(),diary.getFolderId(),diary.getFolderName());
     }

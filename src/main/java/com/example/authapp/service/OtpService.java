@@ -65,8 +65,6 @@ public class OtpService {
 
         }
 
-        System.out.println(otpVerification);
-
         otpRepository.save(otpVerification);
 
         userRepository.save(user);
@@ -75,8 +73,6 @@ public class OtpService {
     public AuthResponse verifyOtp(String email, String otp, Otp_Usage usage) {
 
         Otp_Usage otpUsage = (usage != null) ? usage : Otp_Usage.REGISTER;
-
-        System.out.println(otpUsage);
 
         Otp otpVerification = otpRepository.findByEmailAndOtpAndUsage(email,otp,otpUsage)
                 .orElseThrow(()-> new ApiException(ErrorCode.OTP_INVALID,"Invalid OTP"));

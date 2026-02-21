@@ -26,13 +26,24 @@ public class ForgetPasswordService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailService emailService;
+
     public String forgetpassword(String email) {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(()-> new ApiException(ErrorCode.USER_NOT_FOUND,"User not found"));
 
         String otp = otpService.generateOtp();
+
+        try {
+            emailService.sendOtpToEmail(email, otp);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorCode.MAIL_FAILED,e.getMessage());
+        }
         otpService.saveOrUpdateOtp(user.getEmail(),otp,Otp_Usage.FORGET_PASSWORD,user);
+
         return "OTP sent to registered email";
     }
 

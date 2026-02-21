@@ -57,7 +57,12 @@ public class AuthService {
 
          String otp =  otpService.generateOtp();
 
-         emailService.sendOtpToEmail(request.getEmail(),otp);
+        try {
+            emailService.sendOtpToEmail(request.getEmail(), otp);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorCode.MAIL_FAILED,e.getMessage());
+        }
 
          otpService.saveOrUpdateOtp(request.getEmail(),otp,Otp_Usage.REGISTER,user);
 
