@@ -23,7 +23,7 @@ public class RefreshToken {
     @NotNull(message = "userId is Empty")
     private String userId;
 
-    private Instant expiryDate = Instant.now().plusMillis(5);
+    private Instant expiryDate;
 
     private boolean revoked = false;
 

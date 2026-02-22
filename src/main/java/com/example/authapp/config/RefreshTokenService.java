@@ -35,8 +35,7 @@ public class RefreshTokenService {
                 .token(UUID.randomUUID().toString())
                 .userId(user.getId())
                 .expiryDate(
-                        Instant.now().plus(refreshTokenDuration, ChronoUnit.DAYS)
-                )
+                        Instant.now().plusMillis(refreshTokenDuration))
                 .revoked(false)
                 .build();
 

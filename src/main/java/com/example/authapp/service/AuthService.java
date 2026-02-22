@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -42,11 +43,18 @@ public class AuthService {
 
     public String register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS,"Email already in use");
+        Optional<User> user = userRepository.findByEmail(request.getEmail());
+
+        if(user.isPresent()){
+            if(!user.get().isEmailVerified()){
+                userRepository.delete(user.get());
+            }
+            else{
+                throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS,"Email already in user");
+            }
         }
 
-        User user = User.builder()
+        User userDetails = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -64,7 +72,7 @@ public class AuthService {
             throw new ApiException(ErrorCode.MAIL_FAILED,e.getMessage());
         }
 
-         otpService.saveOrUpdateOtp(request.getEmail(),otp,Otp_Usage.REGISTER,user);
+         otpService.saveOrUpdateOtp(request.getEmail(),otp,Otp_Usage.REGISTER,userDetails);
 
         return "OTP send Your Email";
 

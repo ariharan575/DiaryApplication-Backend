@@ -67,6 +67,8 @@ public class OtpService {
 
         otpRepository.save(otpVerification);
 
+        user.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
+
         userRepository.save(user);
     }
 

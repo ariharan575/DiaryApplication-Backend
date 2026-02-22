@@ -8,6 +8,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -35,5 +36,7 @@ public class User {
     private List<String> roles;
 
     private boolean enabled = true;
+
+    private LocalDateTime otpExpiryTime;
 }
 
