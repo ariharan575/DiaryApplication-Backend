@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface FolderRepository extends MongoRepository<Folder,String> {
 
-    boolean existsByFolderNameAndUserId(String folderName, String userId);
+    boolean existsByUserIdAndFolderName(String userId, String folderName);
 
     @Query(value = "{'userId':?0 , 'status': ?1}",
             sort = "{'createdAt': -1}")
@@ -24,7 +24,7 @@ public interface FolderRepository extends MongoRepository<Folder,String> {
     { 'userId' : ?0 , 
     'status' : ?2 ,
     $or : [
-     {'folderName' :   {$regex: '^?1' , $options: 'i' } },
+     {'folderName' :   {$regex: '^?1' , $options: 'i' } }
       ] }
      """)
     Page<Folder> searchByUserIdAndText(String userId , String text, Status status, Pageable pageable);

@@ -42,8 +42,7 @@ public class FolderService {
     private String getCurrentUserId(Authentication auth){
         String email = auth.getPrincipal().toString();
         User user = userRepository.findByEmail(email).orElseThrow();
-        String userId = user.getId();
-        return userId;
+        return user.getId();
     }
 
     public Pageable pageable (int start,int end) {
@@ -51,10 +50,9 @@ public class FolderService {
                 Sort.by(Sort.Direction.DESC,"createdAt"));
     }
 
-
     public @Nullable FolderDto createFolder(FolderDto request, Authentication auth) {
 
-        if(folderRepository.existsByFolderNameAndUserId(getCurrentUserId(auth),request.getFolderName())){
+        if(folderRepository.existsByUserIdAndFolderName(getCurrentUserId(auth),request.getFolderName())){
             throw new ApiException(ErrorCode.FOLDER_NAME_ALREADY_EXISTS,"FolderName already exists be unique");
         }
 
@@ -68,55 +66,94 @@ public class FolderService {
                 .build();
 
         folderRepository.save(folder);
-        return new FolderDto(folder.getId(),folder.getUserId(),folder.getFolderName(),folder.getCreatedAt(),folder.getStatus());
+
+        return new FolderDto(folder.getId(),folder.getUserId(),
+                folder.getFolderName(),folder.getCreatedAt(),folder.getStatus());
     }
 
     public @Nullable Folder getFolderById(String id, Authentication auth, Status status) {
 
         Status finalStatus = (status != null) ? status : Status.ACTIVE;
 
-       return  folderRepository.findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),finalStatus).orElseThrow(()->
-               new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
+        return folderRepository
+                .findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),finalStatus)
+                .orElseThrow(()->
+                        new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
     }
 
     public Folder updateFolder(FolderDto request, String id, Authentication auth,Status status){
 
         Status finalStatus = (status != null) ? status : Status.ACTIVE;
 
-        Folder folder =  folderRepository.findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),finalStatus).orElseThrow(()->
-                new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
+        Folder folder = folderRepository
+                .findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),finalStatus)
+                .orElseThrow(()->
+                        new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
 
         folder.setFolderName(request.getFolderName());
 
         return folderRepository.save(folder);
-
     }
 
     public void deleteFolder(String id, Authentication auth,Status status){
 
         Status finalStatus = (status != null) ? status : Status.ACTIVE;
 
-        Folder folder = folderRepository.findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),finalStatus).orElseThrow(()->
-                new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
+        Folder folder = folderRepository
+                .findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),finalStatus)
+                .orElseThrow(()->
+                        new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
+
+        diaryRepository.deleteByUserIdAndFolderId(
+                getCurrentUserId(auth),
+                folder.getId()
+        );
 
         folderRepository.deleteById(folder.getId());
     }
 
     public Folder moveToAchieveFolder(String id, Authentication auth,Status status) {
 
-        Folder folder = folderRepository.findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),status).orElseThrow(()->
-                new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
+        Folder folder = folderRepository
+                .findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),status)
+                .orElseThrow(()->
+                        new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
 
         folder.setStatus(Status.ACHIEVED);
 
-        return folderRepository.save(folder);
+        List<Diary> diaries = diaryRepository
+                .findByUserIdAndFolderId(getCurrentUserId(auth),folder.getId());
 
+        diaries.forEach(d -> d.setStatus(Status.ACHIEVED));
+        diaryRepository.saveAll(diaries);
+
+        return folderRepository.save(folder);
+    }
+
+    public Folder restoreFolder(String id, Authentication auth,Status status){
+
+        Folder folder = folderRepository
+                .findByIdAndUserIdAndStatus(id,getCurrentUserId(auth),status)
+                .orElseThrow(()->
+                        new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
+
+        folder.setStatus(Status.ACTIVE);
+
+        List<Diary> diaries = diaryRepository
+                .findByUserIdAndFolderId(getCurrentUserId(auth),folder.getId());
+
+        diaries.forEach(d -> d.setStatus(Status.ACTIVE));
+        diaryRepository.saveAll(diaries);
+
+        return folderRepository.save(folder);
     }
 
     public @Nullable List<Folder> fetchAllFolderByUserId(Status status, Authentication auth) {
 
-        List<Folder> folder = folderRepository.findByUserIdAndStatusOrderByCreatedAtDesc(getCurrentUserId(auth),
-                status,pageable(0,80));
+        List<Folder> folder = folderRepository
+                .findByUserIdAndStatusOrderByCreatedAtDesc(
+                        getCurrentUserId(auth),
+                        status,pageable(0,80));
 
         if(folder.isEmpty()){
             throw new ApiException(ErrorCode.FOLDER_NOT_FOUND,"No more Folder is Exists");
@@ -124,11 +161,12 @@ public class FolderService {
         return folder;
     }
 
-
     public Page<Diary> fetchDiaryByFolderId(String id, Authentication auth) {
 
-         Page<Diary> diaries = diaryRepository.findByUserIdAndFolderIdOrderByCreatedAtDesc(getCurrentUserId(auth),
-                id,pageable(0,80));
+        Page<Diary> diaries = diaryRepository
+                .findByUserIdAndFolderIdOrderByCreatedAtDesc(
+                        getCurrentUserId(auth),
+                        id,pageable(0,80));
 
         diaries.forEach(diary -> {
             String decrypted = encryptionService.decryptDiary(
@@ -145,19 +183,6 @@ public class FolderService {
         return diaries;
     }
 
-    public @Nullable Page<Folder> searchFolderByName(String text, Authentication auth,Status status) {
-
-        Status finalStatus = (status != null) ? status : status.ACTIVE;
-
-        Page<Folder> page = folderRepository.searchByUserIdAndText(
-                getCurrentUserId(auth), text, finalStatus, pageable(0, 50));
-
-        if(page.isEmpty()){
-            throw new ApiException(ErrorCode.FOLDER_NOT_FOUND,"No more Folder is Exists");
-        }
-        return page;
-    }
-
     public DiaryDto createDiaryinsideFolder(DiaryDto request, Authentication userId) {
 
         if(diaryRepository.existsByUserIdAndTitle(getCurrentUserId(userId),request.getTitle())){
@@ -167,6 +192,9 @@ public class FolderService {
         String encryptedDiary =
                 encryptionService.encryptDiary(request.getContent(),getCurrentUserId(userId));
 
+        Folder folder = folderRepository.findById(request.getFolderId())
+                .orElseThrow(() ->
+                        new ApiException(ErrorCode.FOLDER_NOT_FOUND,"Folder not found"));
 
         Diary diary = Diary.builder()
                 .userId(getCurrentUserId(userId))
@@ -175,12 +203,14 @@ public class FolderService {
                 .createdAt(LocalDateTime.now())
                 .folderId(request.getFolderId())
                 .folderName(request.getFolderName())
-                .status(Status.ACTIVE)
+                .status(folder.getStatus())
                 .build();
+
         diaryRepository.save(diary);
 
         return new DiaryDto(diary.getId(),diary.getUserId(),diary.getTitle(),
-                diary.getContent(),diary.getCreatedAt(),diary.getStatus(),diary.getFolderId(),diary.getFolderName());
+                diary.getContent(),diary.getCreatedAt(),
+                diary.getStatus(),diary.getFolderId(),diary.getFolderName());
     }
 
     public Diary restoreDairy(String id, String folderId, Authentication auth, Status status) {
@@ -201,5 +231,38 @@ public class FolderService {
         diary.setStatus(Status.ACTIVE);
 
         return diaryRepository.save(diary);
+    }
+
+    public @Nullable Page<Folder> searchFolderByName(String text, Authentication auth,Status status) {
+
+        Status finalStatus = (status != null) ? status : Status.ACTIVE;
+
+        Page<Folder> page = folderRepository.searchByUserIdAndText(
+                getCurrentUserId(auth), text, finalStatus, pageable(0, 50));
+
+        if(page.isEmpty()){
+            throw new ApiException(ErrorCode.FOLDER_NOT_FOUND,"No more Folder is Exists");
+        }
+        return page;
+    }
+
+    public Page<Diary> searchByFolderIdWiseDiary(String id, Status status, String text, Authentication auth) {
+        Status finalStatus = (status != null ) ? status :Status.ACTIVE;
+
+        Page<Diary> diaries = diaryRepository.searchByUserIdAndFolderIdAndText(
+                getCurrentUserId(auth),id,text,finalStatus,pageable(0,50));
+
+        if(diaries.isEmpty()){
+            throw new ApiException(ErrorCode.DIARY_NOT_FOUND,"No more Diary is Exists");
+        }
+
+        diaries.forEach(diary-> {
+            String decrypted = encryptionService.decryptDiary(
+                    diary.getContent(),getCurrentUserId(auth)
+            );
+            diary.setContent(decrypted);
+        });
+
+        return diaries;
     }
 }

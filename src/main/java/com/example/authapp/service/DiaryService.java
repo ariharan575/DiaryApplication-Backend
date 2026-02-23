@@ -190,6 +190,8 @@ public class DiaryService {
                 .orElseThrow(()-> new ApiException(ErrorCode.DIARY_NOT_FOUND,"Diary not found!"));
 
         diary.setStatus(Status.ACHIEVED);
+        diary.setFolderName(null);
+        diary.setFolderId(null);
         diary.setCreatedAt(LocalDateTime.now());
         diaryRepository.save(diary);
     }

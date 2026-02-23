@@ -33,15 +33,16 @@ public class FolderController {
         return ResponseEntity.ok(folderService.createDiaryinsideFolder(request,auth));
     }
 
-
     @GetMapping("/fetch/{id}")
-    public ResponseEntity<Folder> getFolderById(@PathVariable String id,Authentication auth,Status status){
+    public ResponseEntity<Folder> getFolderById(@PathVariable String id,
+                                                @RequestParam(defaultValue = "ACTIVE") Status status,
+                                                Authentication auth){
         return ResponseEntity.ok(folderService.getFolderById(id,auth,status));
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<Folder> updateFolderById(@RequestBody FolderDto request,
-                                                      @PathVariable String id,Authentication auth,Status status){
+                                                   @PathVariable String id,Authentication auth,Status status){
         return ResponseEntity.ok(folderService.updateFolder(request,id,auth,status));
     }
 
@@ -56,6 +57,16 @@ public class FolderController {
                                                       @RequestParam(defaultValue = "ACTIVE") Status status,
                                                       Authentication auth){
         return ResponseEntity.ok(folderService.moveToAchieveFolder(id,auth,status));
+    }
+
+    // 🔴 NEW RESTORE FOLDER API
+    @PutMapping("/restore/{id}")
+    public ResponseEntity<Folder> restoreFolder(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "ACHIEVED") Status status,
+            Authentication auth){
+
+        return ResponseEntity.ok(folderService.restoreFolder(id,auth,status));
     }
 
     @GetMapping("/fetch_all")
@@ -74,6 +85,16 @@ public class FolderController {
         );
     }
 
+    @GetMapping("/search/diary/{id}")
+    public ResponseEntity<Page<Diary>> searchByFolderIdWiseDiary(
+            @PathVariable String id,
+            @RequestParam(required = false) Status status,
+            @RequestParam String text,
+            Authentication auth){
+        return ResponseEntity.ok(
+                folderService.searchByFolderIdWiseDiary(id,status,text,auth)
+        );
+    }
 
     @GetMapping("/diary/{id}")
     public ResponseEntity<Page<Diary>> getDiaryFolderWaise(@PathVariable String id, Authentication auth){

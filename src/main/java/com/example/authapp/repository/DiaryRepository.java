@@ -37,6 +37,15 @@ public interface DiaryRepository extends MongoRepository<Diary,String> {
      """)
     Page<Diary> searchByUserIdAndText(String userId , String text, Status status, Pageable pageable);
 
+    @Query("{ 'userId': ?0, 'status': ?3, " +
+            "$or: [ { 'folderId': ?1 }, { 'folderName': { $regex: ?2, $options: 'i' } } ] }")
+    Page<Diary> searchByUserIdAndFolderIdAndText(
+            String userId,
+            String folderId,
+            String text,
+            Status status,
+            Pageable pageable);
+
     @Query(value = "{'userId': ?0 , 'folderId': ?1}",
     sort = "{'createdAt': -1}")
     Page<Diary> findByUserIdAndFolderIdOrderByCreatedAtDesc(String userId, String folderId,
@@ -48,6 +57,10 @@ public interface DiaryRepository extends MongoRepository<Diary,String> {
             String folderId,
             Status status
     );
+
+    List<Diary> findByUserIdAndFolderId(String userId, String folderId);
+
+    void deleteByUserIdAndFolderId(String userId, String folderId);
 
 
 
